@@ -4,7 +4,7 @@
 #' @format A vector of 67 daily streamflow values in (ML/day)
 #' @seealso \code{\link{dataLoch}}
 #' @references Grayson, R., Argent, R. M., Nathan, R. J., McMahon, T. A. & Mein, R. G. (1996) Hydrological
-#' Recipes, Cooperative Reserach Centre for Catchment Hydrology, Melbourne.
+#' Recipes, Cooperative Research Centre for Catchment Hydrology, Melbourne.
 "dataBassRiver"
 
 #' @title Rainfall data
@@ -29,7 +29,7 @@
 "dataCatchment"
 
 #' @title Example water quality and streamflow data
-#' @description Data from 4 HRS (Hydrologic Reference Stations, Australian Bureau of Meteorolgy) catchments are included:
+#' @description Data from 4 HRS (Hydrologic Reference Stations, Australian Bureau of Meteorology) catchments are included:
 #' catchment IDs: 410073, 424002, G8150018, A5020502.
 #' @format
 #' Water quality (WQ) and streamflow (Q) data at matching time steps from 4 HRS catchments.
@@ -38,17 +38,17 @@
 #' HRS streamflow data:
 #' \url{http://www.bom.gov.au/water/hrs/}
 #' water quality data:
-#' WaterNSW: \url{https://www.waternsw.com.au/waterinsights/real-time-data}
-#' Northern Territory Department of Environment, Parks and Water Security \url{https://water.nt.gov.au/}
+#' WaterNSW: \url{https://realtimedata.waternsw.com.au/}
+#' Northern Territory Department of Environment, Parks and Water Security \url{https://ntg.aquaticinformatics.net/AQWebportal/}
 #' South Australia Department for Environment and Water \url{https://www.waterconnect.sa.gov.au/}
 "WQ_Q"
 
 #' @title Example sub-daily rainfall and tidal water level data
 #' @description Hourly rainfall (P) and water level (WL) at Burnie, Tasmania for 1997-01-14 to 1997-02-14 (Pluvio ID: 091009; Tide gauge: IDO71005)
 #' @format
-#' Each of P and WL data is a simple vector with no timestamp. The original data is in hourly time step.
+#' Each of P and WL data is a simple vector with no time stamp. The original data is in hourly time step.
 #' @source
-#' Sub-daily rainfall data are from Australian Bureau of Meteorolgy:
+#' Sub-daily rainfall data are from Australian Bureau of Meteorology:
 #' \url{http://www.bom.gov.au/climate/data/stations/}
 #' Sub-daily tidal water level data are from Australian Bureau of Meteorolgy Australian Baseline Sea Level Monitoring Project:
 #' \url{http://www.bom.gov.au/oceanography/projects/abslmp/data/index.shtml}

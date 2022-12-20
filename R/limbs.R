@@ -5,80 +5,69 @@
 #' @param data The data vector (e.g. a streamflow time series)
 #' @param dates Date variable, default to NULL (inputting data as a simple vector)
 #' @param events Event extracted
-#' @param plot c(TRUE,FALSE) whether a plot is produced for the limbs
-#' @param main Desired title of the plot if plot=T
-#' @param filter c("simple", "spline") Optional smoothing of data series
-#' @param min.rates Vector of length 2, mininum increasing rate during rising limb & minimum decreasing rate during falling limb
+#' @param to.plot c(TRUE,FALSE) whether a plot is produced for the limbs
+#' @param ymin Minimum plot extend in vertical direction
+#' @param ymax Maximum plot extent in vertical direction
+#' @param xlab x-axis label
+#' @param ylab y-axis label
+#' @param main Plot title
 #'
 #' @return Returns indices of start and end of events and the rising/falling limbs within each event
 #'
 #' @export
 #' @keywords events
 #' @examples
+#' # Example 1
 #' library(hydroEvents)
-#' data("WQ_Q")
-#' qdata=WQ_Q$qdata[[1]]
-#' Q = as.vector(qdata$Q_cumecs)
-#' BF_res = eventBaseflow(Q)
-#' limbs(data = Q, dates=NULL, events = BF_res, main="with 'eventBaseflow'")
-limbs <- function(data,dates=NULL,events,plot=TRUE,main="Event hydrographs",filter=F,min.rates=c(0,0)) {
-  if (!is.null(dates)) {
-    if(plot==TRUE) {
-      plot(data~dates,type="o",pch=20,cex=0.7,main=main,col="grey")
+#' qdata = WQ_Q$qdata[[1]]
+#' BF_res = eventBaseflow(qdata$Q_cumecs)
+#' limbs(data = qdata$Q_cumecs, dates = NULL, events = BF_res, main = "with 'eventBaseflow'")
+#' BFI_res = eventBaseflow(dataBassRiver)
+#'
+#' # Example 2
+#' library(hydroEvents)
+#' BFI_res = eventBaseflow(dataBassRiver)
+#' d = as.Date("1974-06-30") + 0:(length(dataBassRiver)-1)
+#' limbs(data = dataBassRiver, dates = NULL, events = BFI_res)
+#' limbs(data = dataBassRiver, dates = d, events = BFI_res)
+
+limbs <- function(data, dates = NULL, events, to.plot = TRUE,
+                  ymin = min(data), ymax = max(data), xlab = "", ylab ="", main = "") {
+
+  if (to.plot == TRUE) {
+    if (!is.null(dates)) {
+      plot(data~dates,type="o",pch=20,cex=0.7,col="grey",ylim=c(ymin,ymax),main=main, xlab=xlab, ylab=ylab, mgp = c(1.7, 0.6, 0))
+    } else {
+      plot(data,type="o",pch=20,cex=0.7,col="grey",ylim=c(ymin,ymax),main=main, xlab=xlab, ylab=ylab, mgp = c(1.7, 0.6, 0))
     }
-  } else {
-    if(plot==TRUE) {
-      plot(data,type="o",pch=20,cex=0.7,main=main,col="grey")
-    }
+  }
 
-    extevents = eventid = list()
-    rising = falling = matrix(NA,nrow(events),2)
-    dropevent= vector()
-    for (k in 1:nrow(events)) {
-      extevents[[k]] = data[events$srt[k]:events$end[k]]
+  extevents = eventid = list()
+  rising = falling = as.data.frame(matrix(NA_real_, nrow(events), 2))
+  colnames(rising)  = c("ris.srt","ris.end")
+  colnames(falling) = c("fal.srt","fal.end")
 
-      if (!is.null(dates)) {
-        eventid[[k]] = dates[events$srt[k]:events$end[k]]
+  dropevent = vector()
+  for (k in 1:nrow(events)) {
+    extevents[[k]] = data[events$srt[k]:events$end[k]]
+    eventid[[k]] = events$srt[k]:events$end[k]
 
-      } else {
-        eventid[[k]] = events$srt[k]:events$end[k]
-      }
-      if (filter==TRUE) {
-        # min.rates = min increasing rate during rising & min decreasing rate during falling
-        if (any(diff(extevents[[k]])>=min.rates[1])&any(diff(extevents[[k]])<=min.rates[2])) {
-          if (all(c(min(which(diff(extevents[[k]])>=min.rates[1])),
-                    max(which(diff(extevents[[k]])>=min.rates[1]))+1,
-                    max(which(diff(extevents[[k]])<=min.rates[2]))+1)%in%c(1:length(eventid[[k]])))) {
-            rising[k,] =eventid[[k]][c((min(which(diff(extevents[[k]])>=min.rates[1]))),
-                                       (max(which(diff(extevents[[k]])>=min.rates[1]))+1))]
-            falling[k,] =eventid[[k]][c((max(which(diff(extevents[[k]])>=min.rates[1]))+1),
-                                        (max(which(diff(extevents[[k]])<=min.rates[2]))+1))]
-          } else {
-            dropevent = c(dropevent,k)
-            rising[k,] = falling[k,] = c(NA,NA)
-          }
+    rising[k,]  = eventid[[k]][c(1,(min(which(diff(extevents[[k]])<0))))]
+    falling[k,] = eventid[[k]][c((min(which(diff(extevents[[k]])<0))),length(eventid[[k]]))]
 
-        }  else {
-          dropevent = c(dropevent,k)
-          rising[k,] = falling[k,] = c(NA,NA)
+    if (to.plot == TRUE) {
+      if (!k %in% dropevent) {
+        if (!is.null(dates)) {
+          points(data[c(rising$ris.srt[k],rising$ris.end[k])]~dates[c(rising$ris.srt[k],rising$ris.end[k])],type="p",pch=20,cex=1.5,col="blue")
+          points(data[c(falling$fal.srt[k],falling$fal.end[k])]~dates[c(falling$fal.srt[k],falling$fal.end[k])],type="p",pch=20,cex=1.5,col="red")
+          points(data[c(events$which.max[k])]~dates[c(events$which.max[k])],type="p",pch=17,cex=1.8,col="orange")
 
-        }
+          lines(data[rising$ris.srt[k]:rising$ris.end[k]]~dates[c(rising$ris.srt[k]:rising$ris.end[k])],type="l",pch=20,cex=1.5,col="blue")
+          lines(data[falling$fal.srt[k]:falling$fal.end[k]]~dates[c(falling$fal.srt[k]:falling$fal.end[k])],type="l",pch=20,cex=1.5,col="red")
 
+          text(x=dates[median(eventid[[k]])],y=quantile(extevents[[k]],.9),label=paste("Event",k))
 
-      } else {
-        rising[k,] =eventid[[k]][c(1,(min(which(diff(extevents[[k]])<0))))]
-        falling[k,] =eventid[[k]][c((min(which(diff(extevents[[k]])<0))),length(eventid[[k]]))]
-      }
-
-      rising=as.data.frame(rising)
-      falling=as.data.frame(falling)
-      colnames(rising)=c("ris.srt","ris.end")
-      colnames(falling)=c("fal.srt","fal.end")
-
-      if(plot==TRUE) {
-        if (!k %in% dropevent) {
-          lines(extevents[[k]]~eventid[[k]],type="l",pch=20,cex=0.7)
-
+        } else {
           points(data[c(rising$ris.srt[k],rising$ris.end[k])]~c(rising$ris.srt[k],rising$ris.end[k]),type="p",pch=20,cex=1.5,col="blue")
           points(data[c(falling$fal.srt[k],falling$fal.end[k])]~c(falling$fal.srt[k],falling$fal.end[k]),type="p",pch=20,cex=1.5,col="red")
           points(data[c(events$which.max[k])]~c(events$which.max[k]),type="p",pch=17,cex=1.8,col="orange")
@@ -86,26 +75,25 @@ limbs <- function(data,dates=NULL,events,plot=TRUE,main="Event hydrographs",filt
           lines(data[rising$ris.srt[k]:rising$ris.end[k]]~c(rising$ris.srt[k]:rising$ris.end[k]),type="l",pch=20,cex=1.5,col="blue")
           lines(data[falling$fal.srt[k]:falling$fal.end[k]]~c(falling$fal.srt[k]:falling$fal.end[k]),type="l",pch=20,cex=1.5,col="red")
 
-
           text(x=median(eventid[[k]]),y=quantile(extevents[[k]],.9),label=paste("Event",k))
-
         }
       }
-
     }
-    if(plot==TRUE) {
-    legend("topright",legend=c("rising","falling","peak"),col=c("blue","red","orange"),lty=c(1,1,NA),pch=c(20,20,17))
-}
-    if (length(dropevent) > 0) {
-      events=events[-dropevent,]
-      extevents=extevents[-dropevent]
-      eventid=eventid[-dropevent]
-      rising=rising[-dropevent,]
-      falling=falling[-dropevent,]
-    }
-
-
   }
-  res=cbind(events,rising,falling)
+
+  if (to.plot == TRUE) {
+    legend("topright",legend=c("rising","falling","peak"),col=c("blue","red","orange"),lty=c(1,1,NA),pch=c(20,20,17), bty = "n")
+  }
+
+  if (length(dropevent) > 0) {
+    events=events[-dropevent,]
+    extevents=extevents[-dropevent]
+    eventid=eventid[-dropevent]
+    rising=rising[-dropevent,]
+    falling=falling[-dropevent,]
+  }
+
+
+  res = cbind(events, rising, falling)
   return(res)
 }
